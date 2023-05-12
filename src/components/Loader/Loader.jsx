@@ -9,6 +9,7 @@ const Loader = () => {
         <InfinitySpin 
         width='200'
         color="#4fa94d"
+        timeout ="1000"
     
         
         />
