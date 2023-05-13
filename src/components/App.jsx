@@ -4,7 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import ImageGallary from './ImageGallery/ImageGallery';
 import Searchbar from './Searchbar/Searchbar';
-import fetchImages from './Api/Pixabay';
+import fetchImages from '../Api/Pixabay';
 import Loader from './Loader/Loader';
 import Button from './Button/Button';
 import Modal from './Modal/Modal';
