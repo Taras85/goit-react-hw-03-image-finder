@@ -40,4 +40,6 @@ export default class Modal extends Component{
 
 Modal.propTypes = {
 onToggleModal:PropTypes.func.isRequired,
+largeImageURL:PropTypes.string.isRequired,
+
 };
