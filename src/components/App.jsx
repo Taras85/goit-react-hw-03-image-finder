@@ -3,8 +3,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import ImageGallary from './ImageGallery/ImageGallery';
-import Searchbar from './Searchbar/Searchbar';
-import fetchImages from '../Api/Pixabay';
+import {Searchbar} from './Searchbar/Searchbar';
+import {fetchImages} from '../Api/Pixabay';
 import Loader from './Loader/Loader';
 import Button from './Button/Button';
 import Modal from './Modal/Modal';
@@ -14,6 +14,7 @@ class App extends Component{
   state = {
     query: '',
     images: [],
+    totalImages: 0,
     largeImageURL: '',
     page: 1,
     error: null,
@@ -21,48 +22,48 @@ class App extends Component{
     showModal: false,
   };
 
-  componentDidUpdate(_prevProps, prevState) {
-    if (prevState.query !== this.state.query) {
-      this.setState({ images: [], page: 1, error: null });
+  async componentDidUpdate(prevProps, prevState) {
+    
+    if (prevState.query !== this.state.query || prevState.page !== this.state.page) {
+      this.toggleLoader();
+
+      try {
+        const data = await fetchImages(this.state.query, this.state.page);
+        this.setState({ totalImages: data.totalHits });
+        if (data.totalHits === 0) {
+          this.setState({ images: [] });
+          toast.info(`No found  ${this.state.query}. `);
+          return;
+        }
+        this.setState({ images: [...this.state.images, ...data.hits] });
+      } catch (error) {
+        this.setState({ error });
+        toast.error('Oops! Something went wrong');
+      } finally {
+        this.toggleLoader();
+      }
     }
   }
 
-  searchImages = async () => {
-    const { query, page } = this.state;
-    if (query.trim() === '') {
-      return toast.info('Please, use search field! ')
-    }
 
-    this.toggleLoader();
 
-    try {
-      const request = await fetchImages(query, page);
-      this.setState(({ images, page }) => ({
-        images: [...images, ...request],
-        page: page + 1,
-      }));
-      if (request.length === 0) {
-        this.setState({ error: `No found ${query}` });
-      }
-    } catch (error) {
-      this.setState({ error: 'Oops! Something went wrong' })
-    } finally {
-      this.toggleLoader();
-    }
-  };
-
-  handleChange = e => {
-    this.setState({ query: e.target.value });
-  };
-  
-  handleSubmit = e => {
-    e.preventDefault();
-    this.searchImages();
-  };
+  handleSearchbarSubmit = query => {
+     query !== this.state.query 
+    ? this.setState({ query, page: 1, images: []})
+    : toast.info(`Wealready found images with ${query}`)
+    
+  } 
 
   onLoadMore = () => {
-    this.searchImages();
-  };
+    if (this.state.images.length === this.state.totalImages){
+      toast.info(`At your request no more photos`)
+    }
+    this.setState(({ page }) => ({
+      page: page + 1,
+    }))
+  }
+
+
 
   onOpenModal = e => {
     this.setState({ largeImageURL: e.target.dataset.source });
@@ -83,13 +84,11 @@ class App extends Component{
 
 
   render() {
-    const { query, images, largeImageURL, isLoading, showModal, error } = this.state;
+    const { images, largeImageURL, isLoading, showModal, error } = this.state;
     return (
       <div>
         <Searchbar
-          onHandleSubmit={this.handleSubmit}
-          onSearchQueryChange={this.handleChange}
-          value={query}
+          onSubmit={this.handleSearchbarSubmit}
         />
         {error}
 
